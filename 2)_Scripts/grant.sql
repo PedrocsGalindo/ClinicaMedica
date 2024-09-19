@@ -1,7 +1,9 @@
 #ADM
+CREATE USER 'adm'@'localhost' IDENTIFIED BY '1234';
 GRANT ALL PRIVILEGES ON * TO 'adm';
 
 #MEDICO
+CREATE USER 'medico'@'localhost' IDENTIFIED BY 'medico123';
 GRANT UPDATE, INSERT ON pessoa TO 'medico'; 
 GRANT INSERT, UPDATE ON consulta TO 'medico';
 GRANT INSERT ON medico_possui_horario TO 'medico';
@@ -11,10 +13,12 @@ GRANT INSERT, UPDATE ON pedido_material_cir TO 'medico';
 GRANT INSERT ON item_solicitado TO 'medico';
 
 #TECNICO
+CREATE USER 'tecnico'@'localhost' IDENTIFIED BY 'tecnico123';
 GRANT INSERT ON tecsaude_possui_horario TO 'tecnico';
 
 
 #FILIAL
+CREATE USER 'filial'@'localhost' IDENTIFIED BY 'filial123';
 GRANT UPDATE, INSERT ON ordem_de_compra TO 'filial'; 
 GRANT UPDATE, INSERT ON fatura TO 'filial'; 
 GRANT UPDATE, INSERT ON ordem_de_compra TO 'filial'; 
