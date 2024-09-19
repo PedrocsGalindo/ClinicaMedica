@@ -5,6 +5,7 @@ GRANT ALL PRIVILEGES ON * TO 'adm';
 #MEDICO
 CREATE USER 'medico'@'localhost' IDENTIFIED BY 'medico123';
 GRANT UPDATE, INSERT ON pessoa TO 'medico'; 
+GRANT UPDATE, INSERT ON paciente TO 'medico'; 
 GRANT INSERT, UPDATE ON consulta TO 'medico';
 GRANT INSERT ON medico_possui_horario TO 'medico';
 GRANT INSERT, UPDATE ON tratamento TO 'medico';
@@ -16,6 +17,11 @@ GRANT INSERT ON item_solicitado TO 'medico';
 CREATE USER 'tecnico'@'localhost' IDENTIFIED BY 'tecnico123';
 GRANT INSERT ON tecsaude_possui_horario TO 'tecnico';
 
+#SECRETARIA
+CREATE USER 'secretaria'@'localhost' IDENTIFIED BY 'secretaria123';
+GRANT UPDATE, INSERT ON pessoa TO 'secretaria'; 
+GRANT UPDATE, INSERT ON paciente TO 'secretaria'; 
+GRANT INSERT, UPDATE ON consulta TO 'secretaria';
 
 #FILIAL
 CREATE USER 'filial'@'localhost' IDENTIFIED BY 'filial123';
