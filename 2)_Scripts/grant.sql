@@ -1,3 +1,5 @@
+#Versão que utilizamos não suporta ROLE
+
 #ADM
 CREATE USER 'adm'@'localhost' IDENTIFIED BY '1234';
 GRANT ALL PRIVILEGES ON * TO 'adm';
