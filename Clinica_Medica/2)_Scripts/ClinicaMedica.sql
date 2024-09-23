@@ -171,6 +171,7 @@ PRIMARY KEY(cpf_paciente, cpf_dentista, data_consulta),
 FOREIGN KEY (cpf_paciente) REFERENCES PACIENTE(cpf_paciente),
 FOREIGN KEY (cpf_dentista) REFERENCES MEDICO_DENTISTA(cpf_dentista)
 );
+
 CREATE TABLE AGENDAMENTO (
 cpf_sec VARCHAR(11) NOT NULL,
 cpf_paciente VARCHAR(11) NOT NULL,

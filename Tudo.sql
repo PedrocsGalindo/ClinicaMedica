@@ -105,7 +105,6 @@ BEGIN
         IF fim_cursor = 1 THEN 
             LEAVE leitura;
         END IF;
-        
         SET unidades = c_qtd_minima - c_quant_atual;
         SET cc_descricao = CONCAT(unidades, ' unidades de ', c_descricao);
         
@@ -167,36 +166,43 @@ BEGIN
 END //
 
 #debitar item_solicitado na tabela produto
-CREATE PROCEDURE debitar_itens_solicitados( cod_pedido INT)
-    BEGIN
-	
+CREATE PROCEDURE debitar_itens_solicitados(cod_pedido INT)
+BEGIN
     DECLARE c_cod_produto INT;
     DECLARE c_quant INT;
-	DECLARE fim_cursor INT DEFAULT 0;
-    
+    DECLARE fim_cursor INT DEFAULT 0;
+    DECLARE verificado BOOLEAN;
+
     DECLARE cursor_produtos_solicitados CURSOR FOR
     SELECT cod_produto, quant
     FROM item_solicitado
     WHERE cod_pedido_material_cir = cod_pedido;
-    
+
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET fim_cursor = 1;
+
+    START TRANSACTION;
 
     OPEN cursor_produtos_solicitados;
 
     leitura: LOOP
-		FETCH cursor_produtos_solicitados INTO c_cod_produto, c_quant;
+
+        FETCH cursor_produtos_solicitados INTO c_cod_produto, c_quant;
         
         IF fim_cursor = 1 THEN 
             LEAVE leitura;
         END IF;
         
-        UPDATE produto
-        SET quant_atual = quant_atual - c_quant
-        WHERE cod_produto = c_cod_produto;
-	
+		-- verificação
+        SELECT pedido_verificacao_produto_estoque(c_cod_produto, c_quant) INTO verificado;
+
+        IF verificado = FALSE THEN
+            ROLLBACK;
+            LEAVE leitura;
+        END IF;
+        
     END LOOP;
-    
     CLOSE cursor_produtos_solicitados;
+    COMMIT;
 END //
 
 #atualizar quantidade de itens
@@ -262,8 +268,7 @@ t.cod_tipo_trat = tp.cod_tipo_tratamento AND
 t.cpf_paciente = p.cpf AND
 t.cpf_dentista = p2.cpf AND 
 t.id_tratamento = pro.id_tratamento
-;
-END //
+//
 
 #view produtos cirurgicos
 CREATE VIEW relatorio_produtos_cirurgicos AS
@@ -283,8 +288,7 @@ isl.cod_produto = prod.cod_produto AND
 t.cod_tipo_trat = tp.cod_tipo_tratamento AND
 t.cpf_dentista = p.cpf AND 
 t.id_tratamento = pro.id_tratamento
-;
-END//
+//
 
 #view consulta
 CREATE VIEW relatorio_consultas AS
@@ -297,13 +301,10 @@ pessoa as p,
 pessoa as p2,
 procedimento as pro
 WHERE
-t.cod_tipo_trat = tp.cod_tipo_tratamento AND
-t.cpf_paciente = p.cpf AND
 t.cpf_paciente = c.cpf_paciente AND
-t.cpf_dentista = p2.cpf AND
 t.cpf_dentista = c.cpf_dentista AND
-
-t.id_tratamento = pro.id_tratamento
-;
-END //
-DELIMITER ;
+t.id_tratamento = pro.id_tratamento AND
+t.cod_tipo_trat = tp.cod_tipo_tratamento AND
+c.cpf_paciente = p.cpf AND
+c.cpf_dentista = p2.cpf
+//

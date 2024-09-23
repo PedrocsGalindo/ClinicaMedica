@@ -8,11 +8,10 @@ pessoa as p,
 pessoa as p2,
 procedimento as pro
 WHERE
-t.cod_tipo_trat = tp.cod_tipo_tratamento AND
-t.cpf_paciente = p.cpf AND
 t.cpf_paciente = c.cpf_paciente AND
-t.cpf_dentista = p2.cpf AND
 t.cpf_dentista = c.cpf_dentista AND
-
-t.id_tratamento = pro.id_tratamento
+t.id_tratamento = pro.id_tratamento AND
+t.cod_tipo_trat = tp.cod_tipo_tratamento AND
+c.cpf_paciente = p.cpf AND
+c.cpf_dentista = p2.cpf
 ;
