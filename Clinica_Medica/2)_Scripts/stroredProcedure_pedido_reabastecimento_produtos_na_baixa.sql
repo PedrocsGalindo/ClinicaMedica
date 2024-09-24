@@ -11,10 +11,8 @@ BEGIN
 
     DECLARE cc_descricao VARCHAR(150);
     DECLARE unidades INT;
-
-    DECLARE vl_compra_total DOUBLE;
-    DECLARE num_parcelas INT;
-    DECLARE i INT;
+    DECLARE vl_compra_total DOUBLE DEFAULT 0;
+    DECLARE descricao_total VARCHAR(1000) DEFAULT '';
     
     DECLARE fim_cursor INT DEFAULT 0;
     DECLARE erro INT DEFAULT 0; 
@@ -48,14 +46,11 @@ BEGIN
             #Criar uma nova ordem de compra
             INSERT INTO ordem_de_compra(descricao, vl_total, total_consolidado, foi_cancelada, cnpj_filial, dt_realiza)
             VALUES (cc_descricao, unidades * c_valor_unitario, 0, 0, cnpj, CURDATE());
-        
             SET c_cod_compra = LAST_INSERT_ID();
         ELSE
-			#Adiciona mais um produto a mesma ordem de compra
-            UPDATE ordem_de_compra 
-            SET descricao = CONCAT(descricao, CHAR(10), cc_descricao), 
-                vl_total = vl_total + (unidades * c_valor_unitario)
-            WHERE cod_compra = c_cod_compra;
+			 # Acumula os valores em variáveis
+            SET descricao_total = CONCAT(descricao_total, CHAR(10), cc_descricao);
+            SET vl_compra_total = vl_compra_total + (unidades * c_valor_unitario);
         END IF;
         
         #criacão do item produto
@@ -65,32 +60,21 @@ BEGIN
     END LOOP;
 
     CLOSE cursor_produtos_baixa;
+    
+    #Verificar se houve itens em baixa e se a ordem de compra foi criada
+    IF c_cod_compra IS NOT NULL THEN
+        #Atualiza a ordem de compra apenas uma vez
+        UPDATE ordem_de_compra 
+        SET descricao = descricao_total, 
+            vl_total = vl_compra_total
+        WHERE cod_compra = c_cod_compra;
 
-    #Criação das faturas
-    SELECT vl_total INTO vl_compra_total
-    FROM ordem_de_compra
-    WHERE cod_compra = c_cod_compra;
-
-    # Número de faturas com base no valor total
-    IF vl_compra_total < 1000 THEN
-        SET num_parcelas = 2;
-    ELSEIF vl_compra_total >= 1000 AND vl_compra_total < 2000 THEN
-        SET num_parcelas = 3;
-    ELSE
-        SET num_parcelas = 4;
+        CALL criarFaturas(c_cod_compra, vl_compra_total);
     END IF;
     
-    # Logica de inserção
-    SET i = 1;
-    WHILE i <= num_parcelas DO
-        INSERT INTO fatura (valor_total, status, dt_vencimento, dt_geração, cod_ordem)
-        VALUES (vl_compra_total / num_parcelas, 'pendente', DATE_ADD(CURDATE(), INTERVAL i MONTH), CURDATE(), c_cod_compra);
-    
-        SET i = i + 1;
-    END WHILE;
-    
-    # verificação de um erro
+    #Verificação de um erro
     IF erro = 1 THEN
+        ROLLBACK;
         SELECT 'Erro encontrado';
     ELSE
         COMMIT;
